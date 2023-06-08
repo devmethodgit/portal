@@ -27,4 +27,3 @@ class Config:
 
 class Appication:
     SQLALCHEMY_DATABASE_URI = f"postgresql://{Config.DataBase.USERNAME}:{Config.DataBase.PASSWORD}@{Config.DataBase.HOST}:{Config.DataBase.PORT}/{Config.DataBase.DB}"
-    print(SQLALCHEMY_DATABASE_URI)
