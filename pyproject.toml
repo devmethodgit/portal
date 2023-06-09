@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "my-portal"
+version = "0.1.0"
+description = ""
+authors = ["Николай Некрасов <nnnekrasov@edu.hse.ru>"]
+readme = "README.md"
+packages = [{include = "my_portal", from = "src"}]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+flask = "^2.3.2"
+flask-sqlalchemy = "^3.0.3"
+python-dotenv = "^1.0.0"
+psycopg2 = "^2.9.6"
+requests = "^2.31.0"
+pytest = "^7.3.1"
+
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
