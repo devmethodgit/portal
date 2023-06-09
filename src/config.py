@@ -1,7 +1,16 @@
 import os
 from dotenv import load_dotenv
 
-assert load_dotenv(".env"), "Can't load the environment:("
+assert load_dotenv(
+    ".env"
+), """Can't load the environment:(
+                                Set in .env file: 
+                                DB_USER=
+                                DB_PASSWORD=
+                                DB_NAME=
+                                DB_HOST=
+                                DB_PORT=
+                                """
 
 
 class Config:
@@ -27,4 +36,3 @@ class Config:
 
 class Appication:
     SQLALCHEMY_DATABASE_URI = f"postgresql://{Config.DataBase.USERNAME}:{Config.DataBase.PASSWORD}@{Config.DataBase.HOST}:{Config.DataBase.PORT}/{Config.DataBase.DB}"
-    print(SQLALCHEMY_DATABASE_URI)
