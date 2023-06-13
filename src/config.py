@@ -4,12 +4,13 @@ from dotenv import load_dotenv
 assert load_dotenv(
     ".env"
 ), """Can't load the environment:(
+                                Set in .env file: 
                                 DB_USER=
                                 DB_PASSWORD=
                                 DB_NAME=
                                 DB_HOST=
                                 DB_PORT=
-                            """
+                                """
 
 
 class Config:

@@ -7,6 +7,7 @@ from .routes import user_bp
 
 def create_app(**kwargs):
     app = Flask(__name__)
+    
     app.register_blueprint(user_bp, url_prefix="/user")
     app.config.from_object("config.Appication")
 
@@ -17,5 +18,5 @@ def create_app(**kwargs):
         if "DOCKER_CONTAINER" in os.environ:
             time.sleep(15)
 
-        db.create_all()
+        db.create_tables()
         return app
