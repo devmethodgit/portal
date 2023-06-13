@@ -1,5 +1,78 @@
 from database.database import db
 
+"""
+CREATE TABLE users_login (
+  login_id SERIAL PRIMARY KEY,
+  login VARCHAR(64) NOT NULL UNIQUE
+);
+
+CREATE TABLE users_roles (
+  id SERIAL PRIMARY KEY,
+  user_role_id VARCHAR(16) UNIQUE,
+  user_role VARCHAR(64) NOT NULL
+);
+
+CREATE TABLE mos (
+  id SERIAL PRIMARY KEY,
+  mo_id VARCHAR(16) UNIQUE,
+  mo_name VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE lpus (
+  id SERIAL PRIMARY KEY,
+  lpu_id VARCHAR(16) UNIQUE,
+  lpu_name VARCHAR(255) NOT NULL,
+  ogrn VARCHAR(16) NOT NULL,
+  mo_id VARCHAR(16) NOT NULL REFERENCES mos (mo_id)
+);
+
+CREATE TABLE specialties (
+  id SERIAL PRIMARY KEY,
+  spec_code VARCHAR(16) UNIQUE,
+  spec_name VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE additional_info (
+  additional_id SERIAL PRIMARY KEY,
+  phone VARCHAR(12),
+  email VARCHAR(64)
+);
+
+CREATE TABLE users_additional_info (
+  login_id INTEGER NOT NULL REFERENCES users_login (login_id),
+  additional_id INTEGER REFERENCES additional_info (additional_id),
+  PRIMARY KEY (login_id)
+);
+
+CREATE TABLE users_role (
+  login_id INTEGER NOT NULL REFERENCES users_login (login_id),
+  user_role_id VARCHAR(16) REFERENCES users_roles (user_role_id),
+  PRIMARY KEY (login_id)
+);
+
+CREATE TABLE users_specialisation (
+  login_id INTEGER NOT NULL REFERENCES users_login (login_id),
+  spec_code VARCHAR(16) REFERENCES specialties (spec_code),
+  PRIMARY KEY (login_id)
+);
+
+CREATE TABLE users_lpu (
+  login_id INTEGER NOT NULL REFERENCES users_login (login_id),
+  lpu_id VARCHAR(16) REFERENCES lpus (lpu_id),
+  PRIMARY KEY (login_id)
+);
+
+CREATE TABLE users (
+  login_id INTEGER NOT NULL REFERENCES users_login (login_id),
+  last_name VARCHAR(64),
+  first_name VARCHAR(64),
+  second_name VARCHAR(64),
+  snils VARCHAR(12),
+  PRIMARY KEY (login_id)
+);
+"""
+
+
 
 class UserLogins(db.Model):
     __tablename__ = "users_login"
