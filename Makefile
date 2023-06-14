@@ -1,9 +1,10 @@
 test:
-	poetry run pytest tests/test.py
+	poetry run pytest tests/test.py -v
 
 app:
 	docker compose up --build
 
+include .env
 local_up:
 	poetry run python src/wsgi.py
 

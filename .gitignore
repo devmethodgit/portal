@@ -3,4 +3,5 @@ __pycache__
 data
 .*
 !.gitignore
->>>>>>> first-step-portal
+*.xlsx
+./spec.py

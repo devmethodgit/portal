@@ -1,37 +1,58 @@
 from config import Config
+from database.models import *
+from flask import Blueprint, request, jsonify
 from database.database import db
-from flask import Blueprint
 
-bp = Blueprint("bp", __name__)
-
-
-@bp.route("/")
-def hello_world():
-    return "<p>Hello, DIT!</p>", Config.ResponseStatusCode.OK
+user_bp = Blueprint("user", __name__)
 
 
-@bp.post("/<string:username>")
-def add_user(username):
-    db.add_user(username)
-    return "<p>User was added!</p>", Config.ResponseStatusCode.OK
+@user_bp.route("/test")
+def test_page():
+    return jsonify(message="Hello, DIT!"), Config.ResponseStatusCode.OK
 
 
-@bp.get("/<string:username>")
-def check_user(username):
-    name = db.find_user(username)
+@user_bp.post("/")
+def add_user():
+    data = request.get_json()
+    user = User(data)
+    user.user_login = UserLogins(data)
+    db.session.add(user)
+    db.session.commit()
+    return (
+        jsonify(message="User added!", login_id=user.login_id),
+        Config.ResponseStatusCode.OK,
+    )
 
-    if not name:
-        return "<p>User not found!</p>", Config.ResponseStatusCode.NOT_FOUND
 
-    return {"username": name[0]}, Config.ResponseStatusCode.OK
+@user_bp.delete("/<int:login_id>")
+def delete_user(login_id):
+    user_login = UserLogins.query.filter_by(login_id=login_id).first()
+
+    if user_login is None:
+        return jsonify(message="User not founded!"), Config.ResponseStatusCode.NOT_FOUND
+
+    db.session.delete(user_login)
+    db.session.commit()
+
+    return jsonify(message="User deleted!"), Config.ResponseStatusCode.OK
 
 
-@bp.delete("/<string:username>")
-def delete_user(username):
-    name = db.find_user(username)
+@user_bp.get("/<int:login_id>")
+def check_user(login_id):
+    user = User.query.filter_by(login_id=login_id).first()
 
-    if name is None:
-        return "<p>User not found!</p>", Config.ResponseStatusCode.NOT_FOUND
+    if user is None:
+        return jsonify(message="User not founded!"), Config.ResponseStatusCode.NOT_FOUND
 
-    db.delete_user(username)
-    return "<p>User was deleted!</p>", Config.ResponseStatusCode.OK
+    user_dict = {
+        "last_name": user.last_name,
+        "first_name": user.first_name,
+        "second_name": user.second_name,
+        "snils": user.snils,
+        "login": user.user_login.login,
+    }
+
+    return (
+        jsonify(message="User founded!", data=user_dict),
+        Config.ResponseStatusCode.OK,
+    )
