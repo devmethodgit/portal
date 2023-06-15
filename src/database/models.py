@@ -1,190 +1,235 @@
 from database.database import db
+from datetime import datetime
+from sqlalchemy.orm import relationship
+from sqlalchemy import event, text
+
 
 """
-CREATE TABLE users_login (
-  login_id SERIAL PRIMARY KEY,
-  login VARCHAR(64) NOT NULL UNIQUE
-);
-
-CREATE TABLE users_roles (
-  id SERIAL PRIMARY KEY,
-  user_role_id VARCHAR(16) UNIQUE,
-  user_role VARCHAR(64) NOT NULL
-);
-
-CREATE TABLE mos (
-  id SERIAL PRIMARY KEY,
-  mo_id VARCHAR(16) UNIQUE,
-  mo_name VARCHAR(255) NOT NULL
+CREATE TABLE role (
+    id SERIAL PRIMARY KEY,
+    role_id INTEGER UNIQUE,
+    role_name VARCHAR(64) NOT NULL
 );
 
 CREATE TABLE lpus (
-  id SERIAL PRIMARY KEY,
-  lpu_id VARCHAR(16) UNIQUE,
-  lpu_name VARCHAR(255) NOT NULL,
-  ogrn VARCHAR(16) NOT NULL,
-  mo_id VARCHAR(16) NOT NULL REFERENCES mos (mo_id)
+    id SERIAL PRIMARY KEY,
+    lpus_id INTEGER UNIQUE,
+    lpus_name VARCHAR(255) NOT NULL,
+    ogrn VARCHAR(16) NOT NULL
 );
 
 CREATE TABLE specialties (
-  id SERIAL PRIMARY KEY,
-  spec_code VARCHAR(16) UNIQUE,
-  spec_name VARCHAR(255) NOT NULL
-);
-
-CREATE TABLE additional_info (
-  additional_id SERIAL PRIMARY KEY,
-  phone VARCHAR(12),
-  email VARCHAR(64)
+    id SERIAL PRIMARY KEY,
+    spec_code INTEGER UNIQUE,
+    spec_name VARCHAR(255) NOT NULL
 );
 
 CREATE TABLE users_additional_info (
-  login_id INTEGER NOT NULL REFERENCES users_login (login_id),
-  additional_id INTEGER REFERENCES additional_info (additional_id),
-  PRIMARY KEY (login_id)
+    user_id INTEGER PRIMARY KEY REFERENCES users (id),
+    phone VARCHAR(16),
+    email VARCHAR(255)
 );
 
-CREATE TABLE users_role (
-  login_id INTEGER NOT NULL REFERENCES users_login (login_id),
-  user_role_id VARCHAR(16) REFERENCES users_roles (user_role_id),
-  PRIMARY KEY (login_id)
+CREATE TABLE users_to_role (
+    users_id INTEGER PRIMARY KEY REFERENCES users (id),
+    role_id INTEGER REFERENCES role (id)
 );
 
-CREATE TABLE users_specialisation (
-  login_id INTEGER NOT NULL REFERENCES users_login (login_id),
-  spec_code VARCHAR(16) REFERENCES specialties (spec_code),
-  PRIMARY KEY (login_id)
+CREATE TABLE user_to_specialisation (
+    users_id INTEGER PRIMARY KEY REFERENCES users (id),
+    spec_id INTEGER REFERENCES specialties (id)
 );
 
-CREATE TABLE users_lpu (
-  login_id INTEGER NOT NULL REFERENCES users_login (login_id),
-  lpu_id VARCHAR(16) REFERENCES lpus (lpu_id),
-  PRIMARY KEY (login_id)
+CREATE TABLE user_to_lpu (
+    users_id INTEGER PRIMARY KEY REFERENCES users (id),
+    lpus_id INTEGER REFERENCES lpus (id)
+);
+
+CREATE TABLE lpus_to_mo (
+    lpus_id INTEGER PRIMARY KEY REFERENCES lpus (id),
+    mo_id INTEGER NOT NULL REFERENCES lpus (id)
 );
 
 CREATE TABLE users (
-  login_id INTEGER NOT NULL REFERENCES users_login (login_id),
-  last_name VARCHAR(64),
-  first_name VARCHAR(64),
-  second_name VARCHAR(64),
-  snils VARCHAR(12),
-  PRIMARY KEY (login_id)
+    id SERIAL PRIMARY KEY,
+    login VARCHAR(128),
+    last_name VARCHAR(64),
+    first_name VARCHAR(64),
+    second_name VARCHAR(64),
+    snils VARCHAR(12),
+    created_at TIMESTAMPTZ NOT NULL,
+    changed_at TIMESTAMPTZ,
+    FOREIGN KEY (id) REFERENCES users_additional_info (user_id)
 );
+
+
+CREATE OR REPLACE FUNCTION update_time()
+RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE users
+    SET changed_at = NOW() 
+    WHERE id = NEW.users_id;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE TRIGGER update_time_trigger_usc
+AFTER UPDATE ON user_to_specialisation
+FOR EACH ROW
+EXECUTE FUNCTION update_time();
+
+CREATE TRIGGER update_time_trigger_utr
+AFTER UPDATE ON users_to_role 
+FOR EACH ROW
+EXECUTE FUNCTION update_time();
+
+CREATE TRIGGER update_time_trigger_utl
+AFTER UPDATE ON user_to_lpu 
+FOR EACH ROW
+EXECUTE FUNCTION update_time();
+
+CREATE OR REPLACE FUNCTION update_changed_at()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.changed_at := NOW();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER update_time_trigger_u
+BEFORE UPDATE ON users
+FOR EACH ROW
+EXECUTE FUNCTION update_changed_at();
+
 """
 
 
-
-class UserLogins(db.Model):
-    __tablename__ = "users_login"
-    login_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    login = db.Column(db.String(64), nullable=False, unique=True)
-
-    user = db.relationship(
-        "User", backref="user_login", uselist=False, cascade="all,delete"
-    )
-
-    def __init__(self, data):
-        self.login = data["login"]
-
-
-class UserRoles(db.Model):
-    __tablename__ = "users_roles"
+class Role(db.Model):
+    __tablename__ = "role"
     id = db.Column(db.Integer, primary_key=True)
-    user_role_id = db.Column(db.String(16), unique=True)
-    user_role = db.Column(db.String(64), nullable=False)
+    role_id = db.Column(db.Integer, unique=True)
+    role_name = db.Column(db.String(64), nullable=False)
 
 
-class Mos(db.Model):
-    __tablename__ = "mos"
-    id = db.Column(db.Integer, primary_key=True)
-    mo_id = db.Column(db.String(16), unique=True)
-    mo_name = db.Column(db.String(255), nullable=False)
-
-
-class Lpus(db.Model):
+class Lpu(db.Model):
     __tablename__ = "lpus"
     id = db.Column(db.Integer, primary_key=True)
-    lpu_id = db.Column(db.String(16), unique=True)
-    lpu_name = db.Column(db.String(255), nullable=False)
+    lpus_id = db.Column(db.Integer, unique=True)
+    lpus_name = db.Column(db.String(255), nullable=False)
     ogrn = db.Column(db.String(16), nullable=False)
-    mo_id = db.Column(db.String(16), db.ForeignKey("mos.mo_id"), nullable=False)
 
 
 class Specialties(db.Model):
     __tablename__ = "specialties"
     id = db.Column(db.Integer, primary_key=True)
-    spec_code = db.Column(db.String(16), unique=True)
+    spec_code = db.Column(db.Integer, unique=True)
     spec_name = db.Column(db.String(255), nullable=False)
+
+    def __init__(self, data):
+        self.spec_code = data["spec_code"]
+        self.spec_name = data["spec_name"]
 
 
 class AdditionalInfo(db.Model):
-    __tablename__ = "additional_info"
-    additional_id = db.Column(db.Integer, primary_key=True)
-    phone = db.Column(db.String(12))
-    email = db.Column(db.String(64))
-
-
-class UsersAdditionalInfo(db.Model):
     __tablename__ = "users_additional_info"
-    login_id = db.Column(
+    user_id = db.Column(
         db.Integer,
-        db.ForeignKey("users_login.login_id"),
+        db.ForeignKey("users.id"),
         primary_key=True,
         nullable=False,
     )
-    additional_id = db.Column(
-        db.Integer, db.ForeignKey("additional_info.additional_id")
-    )
+    phone = db.Column(db.String(16))
+    email = db.Column(db.String(255))
 
 
 class UsersRole(db.Model):
-    __tablename__ = "users_role"
-    login_id = db.Column(
+    __tablename__ = "users_to_role"
+    users_id = db.Column(
         db.Integer,
-        db.ForeignKey("users_login.login_id"),
+        db.ForeignKey("users.id"),
         primary_key=True,
         nullable=False,
     )
-    user_role_id = db.Column(db.String(16), db.ForeignKey("users_roles.user_role_id"))
+    role_id = db.Column(db.Integer, db.ForeignKey("role.id"))
 
 
 class UsersSpec(db.Model):
-    __tablename__ = "users_specialisation"
-    login_id = db.Column(
+    __tablename__ = "user_to_specialisation"
+    users_id = db.Column(
         db.Integer,
-        db.ForeignKey("users_login.login_id"),
+        db.ForeignKey("users.id"),
         primary_key=True,
         nullable=False,
     )
-    spec_code = db.Column(db.String(16), db.ForeignKey("specialties.spec_code"))
+    spec_id = db.Column(db.Integer, db.ForeignKey("specialties.id"))
 
 
 class UsersLpu(db.Model):
-    __tablename__ = "users_lpu"
-    login_id = db.Column(
+    __tablename__ = "user_to_lpu"
+    users_id = db.Column(
         db.Integer,
-        db.ForeignKey("users_login.login_id"),
+        db.ForeignKey("users.id"),
         primary_key=True,
         nullable=False,
     )
-    lpu_id = db.Column(db.String(16), db.ForeignKey("lpus.lpu_id"))
+    lpus_id = db.Column(db.Integer, db.ForeignKey("lpus.id"))
+
+
+class LpusMo(db.Model):
+    __tablename__ = "lpus_to_mo"
+    lpus_id = db.Column(
+        db.Integer,
+        db.ForeignKey("lpus.id"),
+        primary_key=True,
+        nullable=False,
+    )
+    mo_id = db.Column(
+        db.Integer,
+        db.ForeignKey("lpus.id"),
+        nullable=False,
+    )
 
 
 class User(db.Model):
     __tablename__ = "users"
-    login_id = db.Column(
+    id = db.Column(
         db.Integer,
-        db.ForeignKey("users_login.login_id"),
         primary_key=True,
         nullable=False,
     )
+    login = db.Column(db.String(128))
     last_name = db.Column(db.String(64))
     first_name = db.Column(db.String(64))
     second_name = db.Column(db.String(64))
     snils = db.Column(db.String(12))
+    created_at = db.Column(db.DateTime(timezone=True), nullable=False)
+    changed_at = db.Column(db.DateTime(timezone=True))
 
     def __init__(self, data):
+        self.login = data["login"]
         self.last_name = data["last_name"]
         self.first_name = data["first_name"]
         self.second_name = data["second_name"]
         self.snils = data["snils"]
+        self.created_at = datetime.now()
+
+    lpu = relationship(UsersLpu, backref="user", cascade="all, delete-orphan")
+    role = relationship(UsersRole, backref="user", cascade="all, delete-orphan")
+    spec = relationship(UsersSpec, backref="user", cascade="all, delete-orphan")
+    addit = relationship(AdditionalInfo, backref="user", cascade="all, delete-orphan")
+
+
+@event.listens_for(UsersRole, "before_update")
+@event.listens_for(UsersLpu, "before_update")
+@event.listens_for(UsersSpec, "before_update")
+def user_update_handler(mapper, connection, target):
+    connection.execute(
+        text("UPDATE users SET changed_at = NOW() WHERE id = :user_id").params(
+            user_id=target.users_id
+        )
+    )
+
+
+@event.listens_for(User, "before_update")
+def user_update_handler(mapper, connection, target: User):
+    target.changed_at = datetime.now()
