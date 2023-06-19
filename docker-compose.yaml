@@ -18,12 +18,14 @@ services:
     restart: always
     ports:
       - 5000:5000
+    stop_signal: SIGINT
     depends_on:
       - db
     volumes:
       - ./src:/web/src
       - .env:/web/.env
+      - ./migration:/web/migration
+      - ./alembic.ini:/web/alembic.ini
     environment:
       - DOCKER_CONTAINER=true
       - TZ=${DB_TIMEZONE}
-    command: poetry run python /web/src/wsgi.py

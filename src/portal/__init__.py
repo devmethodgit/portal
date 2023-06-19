@@ -18,6 +18,4 @@ def create_app(**kwargs):
         # wait for the database to load
         if "DOCKER_CONTAINER" in os.environ:
             time.sleep(15)
-
-        db.create_all()
         return app
