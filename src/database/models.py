@@ -101,6 +101,15 @@ BEFORE UPDATE ON users
 FOR EACH ROW
 EXECUTE FUNCTION update_changed_at();
 
+CREATE INDEX idx_role ON role (role_id);
+CREATE INDEX idx_lpus ON lpus (lpus_id);
+CREATE INDEX idx_specialties ON specialties (spec_code);
+CREATE INDEX idx_users_additional_info ON users_additional_info (user_id);
+CREATE INDEX idx_users_to_role ON users_to_role (users_id, role_id);
+CREATE INDEX idx_users_to_specialisation ON users_to_specialisation (users_id, spec_id);
+CREATE INDEX idx_user_to_lpu ON user_to_lpu (users_id, lpus_id);
+CREATE INDEX idx_lpus_to_mo ON lpus_to_mo (mo_id, lpus_id);
+CREATE INDEX idx_users ON users (login);
 """
 
 
