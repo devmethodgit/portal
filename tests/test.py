@@ -1,6 +1,5 @@
 import requests
 from src.config import Config
-import pandas as pd
 
 
 class JsonTestData:

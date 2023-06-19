@@ -1,4 +1,4 @@
-from database.database import db
+from .database import db
 from datetime import datetime
 from sqlalchemy.orm import relationship
 from sqlalchemy import event, text
@@ -151,10 +151,12 @@ class UsersRole(db.Model):
         nullable=False,
     )
     role_id = db.Column(db.Integer, db.ForeignKey("role.id"))
+    created_at = db.Column(db.DateTime(timezone=True), default=datetime.now())
+    changed_at = db.Column(db.DateTime(timezone=True))
 
 
 class UsersSpec(db.Model):
-    __tablename__ = "user_to_specialisation"
+    __tablename__ = "users_to_specialisation"
     users_id = db.Column(
         db.Integer,
         db.ForeignKey("users.id"),
@@ -162,6 +164,8 @@ class UsersSpec(db.Model):
         nullable=False,
     )
     spec_id = db.Column(db.Integer, db.ForeignKey("specialties.id"))
+    created_at = db.Column(db.DateTime(timezone=True), default=datetime.now())
+    changed_at = db.Column(db.DateTime(timezone=True))
 
 
 class UsersLpu(db.Model):
@@ -173,6 +177,8 @@ class UsersLpu(db.Model):
         nullable=False,
     )
     lpus_id = db.Column(db.Integer, db.ForeignKey("lpus.id"))
+    created_at = db.Column(db.DateTime(timezone=True), default=datetime.now())
+    changed_at = db.Column(db.DateTime(timezone=True))
 
 
 class LpusMo(db.Model):
@@ -188,6 +194,8 @@ class LpusMo(db.Model):
         db.ForeignKey("lpus.id"),
         nullable=False,
     )
+    created_at = db.Column(db.DateTime(timezone=True), default=datetime.now())
+    changed_at = db.Column(db.DateTime(timezone=True))
 
 
 class User(db.Model):
@@ -202,7 +210,7 @@ class User(db.Model):
     first_name = db.Column(db.String(64))
     second_name = db.Column(db.String(64))
     snils = db.Column(db.String(12))
-    created_at = db.Column(db.DateTime(timezone=True), nullable=False)
+    created_at = db.Column(db.DateTime(timezone=True), default=datetime.now())
     changed_at = db.Column(db.DateTime(timezone=True))
 
     def __init__(self, data):
@@ -211,7 +219,6 @@ class User(db.Model):
         self.first_name = data["first_name"]
         self.second_name = data["second_name"]
         self.snils = data["snils"]
-        self.created_at = datetime.now()
 
     lpu = relationship(UsersLpu, backref="user", cascade="all, delete-orphan")
     role = relationship(UsersRole, backref="user", cascade="all, delete-orphan")
@@ -219,15 +226,20 @@ class User(db.Model):
     addit = relationship(AdditionalInfo, backref="user", cascade="all, delete-orphan")
 
 
-@event.listens_for(UsersRole, "before_update")
-@event.listens_for(UsersLpu, "before_update")
-@event.listens_for(UsersSpec, "before_update")
+@event.listens_for(AdditionalInfo, "before_update")
 def user_update_handler(mapper, connection, target):
     connection.execute(
         text("UPDATE users SET changed_at = NOW() WHERE id = :user_id").params(
             user_id=target.users_id
         )
     )
+
+
+@event.listens_for(UsersRole, "before_update")
+@event.listens_for(UsersLpu, "before_update")
+@event.listens_for(UsersSpec, "before_update")
+def user_update_handler(mapper, connection, target: User):
+    target.changed_at = datetime.now()
 
 
 @event.listens_for(User, "before_update")
