@@ -1,24 +1,26 @@
 import requests
-from src.config import Config
+from src.config import ConfigApp
+
+Config = ConfigApp()
 
 
 class JsonTestData:
     add_data = {
         "user": {
-            "login": "nnnekr",
-            "last_name": "Nekrasov",
-            "first_name": "Nikolay",
-            "second_name": "Nikolaevich",
-            "snils": "127-001",
+            "LOGIN": "nnnekr",
+            "LAST_NAME": "Nekrasov",
+            "FIRST_NAME": "Nikolay",
+            "SECOND_NAME": "Nikolaevich",
+            "SNILS": "127-001",
         },
         "specs": [
             {
-                "spec_code": 10,
-                "spec_name": "Терапевт",
+                "SPEC_CODE": 10,
+                "SPEC_NAME": "Терапевт",
             },
             {
-                "spec_code": 11,
-                "spec_name": "Онколог",
+                "SPEC_CODE": 11,
+                "SPEC_NAME": "Онколог",
             },
         ],
     }
@@ -41,14 +43,14 @@ class JsonTestData:
 
 
 def test_hello_world():
-    response = requests.get(f"{Config.BASE_URL}/user/test")
+    response = requests.get(f"{Config.Web.BASE_URL}/data/test")
     assert response.json() == JsonTestData.test_mess
     assert response.status_code == Config.ResponseStatusCode.OK
 
 
 def test_add_and_delete_user():
     response = requests.post(
-        f"{Config.BASE_URL}/user",
+        f"{Config.Web.BASE_URL}/data",
         json=JsonTestData.add_data["user"],
     )
     assert response.status_code == Config.ResponseStatusCode.OK
@@ -56,24 +58,24 @@ def test_add_and_delete_user():
     user_id = json_response["user_id"]
     assert json_response["message"] == JsonTestData.user_added["message"]
 
-    response = requests.get(f"{Config.BASE_URL}/user/{user_id}")
+    response = requests.get(f"{Config.Web.BASE_URL}/data/{user_id}")
     assert response.status_code == Config.ResponseStatusCode.OK
     json_response = response.json()
     assert json_response["message"] == JsonTestData.user_founded["message"]
     assert json_response["user"] == JsonTestData.add_data["user"]
 
-    response = requests.delete(f"{Config.BASE_URL}/user/{user_id}")
+    response = requests.delete(f"{Config.Web.BASE_URL}/data/{user_id}")
     assert response.status_code == Config.ResponseStatusCode.OK
     assert response.json() == JsonTestData.user_deleted
 
-    response = requests.get(f"{Config.BASE_URL}/user/{user_id}")
+    response = requests.get(f"{Config.Web.BASE_URL}/data/{user_id}")
     assert response.status_code == Config.ResponseStatusCode.NOT_FOUND
     assert response.json() == JsonTestData.user_not_founded
 
 
 def test_cascade_delete():
     response = requests.post(
-        f"{Config.BASE_URL}/user",
+        f"{Config.Web.BASE_URL}/data",
         json=JsonTestData.add_data["user"],
     )
     assert response.status_code == Config.ResponseStatusCode.OK
@@ -82,7 +84,7 @@ def test_cascade_delete():
     assert json_response["message"] == JsonTestData.user_added["message"]
 
     response = requests.post(
-        f"{Config.BASE_URL}/fill/spec",
+        f"{Config.Web.BASE_URL}/fill/spec",
         json=JsonTestData.add_data["specs"][0],
     )
     assert response.status_code == Config.ResponseStatusCode.OK
@@ -91,7 +93,7 @@ def test_cascade_delete():
     assert json_response["message"] == JsonTestData.spec_added["message"]
 
     response = requests.get(
-        f"{Config.BASE_URL}/fill/spec/{spec_id}",
+        f"{Config.Web.BASE_URL}/fill/spec/{spec_id}",
     )
     assert response.status_code == Config.ResponseStatusCode.OK
     json_response = response.json()
@@ -99,41 +101,41 @@ def test_cascade_delete():
     assert json_response["spec"] == JsonTestData.add_data["specs"][0]
 
     response = requests.post(
-        f"{Config.BASE_URL}/user/spec/{user_id}/{spec_id}",
+        f"{Config.Web.BASE_URL}/data/spec/{user_id}/{spec_id}",
     )
     assert response.status_code == Config.ResponseStatusCode.OK
     assert response.json() == JsonTestData.user_spec_added
 
     response = requests.get(
-        f"{Config.BASE_URL}/user/spec/{user_id}",
+        f"{Config.Web.BASE_URL}/data/spec/{user_id}",
     )
     assert response.status_code == Config.ResponseStatusCode.OK
     json_response = response.json()
     assert json_response["message"] == JsonTestData.user_spec_founded["message"]
     assert json_response["spec_id"] == spec_id
 
-    response = requests.delete(f"{Config.BASE_URL}/user/{user_id}")
+    response = requests.delete(f"{Config.Web.BASE_URL}/data/{user_id}")
     assert response.status_code == Config.ResponseStatusCode.OK
     assert response.json() == JsonTestData.user_deleted
 
-    response = requests.get(f"{Config.BASE_URL}/user/{user_id}")
+    response = requests.get(f"{Config.Web.BASE_URL}/data/{user_id}")
     assert response.status_code == Config.ResponseStatusCode.NOT_FOUND
     assert response.json() == JsonTestData.user_not_founded
 
     response = requests.get(
-        f"{Config.BASE_URL}/user/spec/{user_id}",
+        f"{Config.Web.BASE_URL}/data/spec/{user_id}",
     )
     assert response.status_code == Config.ResponseStatusCode.NOT_FOUND
     assert response.json() == JsonTestData.user_spec_not_founded
 
     response = requests.delete(
-        f"{Config.BASE_URL}/fill/spec/{spec_id}",
+        f"{Config.Web.BASE_URL}/fill/spec/{spec_id}",
     )
     assert response.status_code == Config.ResponseStatusCode.OK
     assert response.json() == JsonTestData.spec_deleted
 
     response = requests.get(
-        f"{Config.BASE_URL}/fill/spec/{spec_id}",
+        f"{Config.Web.BASE_URL}/fill/spec/{spec_id}",
     )
     assert response.status_code == Config.ResponseStatusCode.NOT_FOUND
     assert response.json() == JsonTestData.spec_not_founded
