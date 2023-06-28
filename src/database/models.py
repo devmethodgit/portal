@@ -159,6 +159,10 @@ class UsersRole(db.Model):
     created_at = db.Column(db.DateTime(timezone=True), default=datetime.now())
     changed_at = db.Column(db.DateTime(timezone=True))
 
+    def __init__(self, data: dict):
+        self.users_id = data["USER_ID"]
+        self.role_id = data["USER_ROLE_ID"]
+
 
 class UsersSpec(db.Model):
     __tablename__ = "users_to_specialisation"
@@ -171,6 +175,10 @@ class UsersSpec(db.Model):
     spec_id = db.Column(db.Integer, db.ForeignKey("specialties.id"))
     created_at = db.Column(db.DateTime(timezone=True), default=datetime.now())
     changed_at = db.Column(db.DateTime(timezone=True))
+
+    def __init__(self, data: dict):
+        self.users_id = data["USER_ID"]
+        self.spec_id = data["SPEC_CODE"]
 
 
 class UsersLpu(db.Model):

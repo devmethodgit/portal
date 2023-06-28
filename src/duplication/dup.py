@@ -1,5 +1,5 @@
 from pandas import DataFrame
-from config import ConfigEnv, Production, Development
+from config import ConfigEnv, Development
 import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
@@ -24,7 +24,8 @@ def get_dataframe_from_parquet():
 def get_dataframe_from_file():
     dataframe: DataFrame = pd.read_excel(
         Development.FILE_PATH,
-        dtype={"LPU_ID": str, "MO_ID": str, "OGRN": str},
+        # dtype={"LPU_ID": str, "MO_ID": str, "OGRN": str},
+        dtype=str,
     )
     table = pa.Table.from_pandas(dataframe)
     pq.write_table(table, "./data.parquet")
@@ -54,7 +55,7 @@ def add_data(
     if not do_request:
         return
     response = requests.post(
-        f"{Development.Web.BASE_URL}/fill/list/{data_type}",
+        f"{ConfigEnv.Web.BASE_URL}/fill/list/{data_type}",
         json=data,
     )
     assert response.status_code == ConfigEnv.ResponseStatusCode.OK
@@ -66,10 +67,12 @@ def add_users(dataframe):
 
 def add_role(dataframe):
     add_data(dataframe, *ConfigEnv.Columns.ROLE)
+    print("Role added")
 
 
 def add_spec(dataframe):
     add_data(dataframe, *ConfigEnv.Columns.SPEC)
+    print("Spec added")
 
 
 def add_lpus(dataframe):
@@ -77,13 +80,19 @@ def add_lpus(dataframe):
     data = []
     add_data(dataframe, *ConfigEnv.Columns.LPU, data, data_id_set, False)
     add_data(dataframe, *ConfigEnv.Columns.MO, data, data_id_set)
+    print("Lpus added")
 
 
 def lpu_to_mo(dataframe):
     add_data(dataframe, *ConfigEnv.Columns.LPU_TO_MO)
+    print("Lpus to mo added")
 
 
-def main():
+def role_to_user():
+    pass
+
+
+def get_df():
     if ConfigEnv.ENV == "development":
         if Development.FILE_PATH:
             df = get_dataframe_from_file()
@@ -91,11 +100,16 @@ def main():
             df = get_dataframe_from_parquet()
     else:
         df = get_data_from_db()
-    add_users(df)
+    return df.fillna("None")
+
+
+def main():
+    df = get_df()
     add_role(df)
     add_spec(df)
     add_lpus(df)
     lpu_to_mo(df)
+    add_users(df)
 
 
 if __name__ == "__main__":

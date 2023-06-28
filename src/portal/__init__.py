@@ -11,7 +11,7 @@ def create_app(**kwargs):
 
     app.register_blueprint(data_bp, url_prefix="/data")
     app.register_blueprint(fill_tables_bp, url_prefix="/fill")
-    app.config.from_object(ConfigDB.DataBase)
+    app.config.from_object(ConfigDB)
 
     db.init_app(app)
 

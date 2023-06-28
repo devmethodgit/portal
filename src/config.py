@@ -21,18 +21,15 @@ class Config:
 
 
 class ConfigDB(Config):
-    class DataBase:
-        PASSWORD = os.environ.get("DB_PASSWORD")
-        HOST = os.environ.get("DB_HOST")
-        DB = os.environ.get("DB_NAME")
-        USERNAME = os.environ.get("DB_USER")
-        PORT = os.environ.get("DB_PORT")
-        SQLALCHEMY_DATABASE_URI = (
-            f"postgresql://{USERNAME}:{PASSWORD}@{HOST}:{PORT}/{DB}"
-        )
+    PASSWORD = os.environ.get("DB_PASSWORD")
+    HOST = os.environ.get("DB_HOST")
+    DB = os.environ.get("DB_NAME")
+    USERNAME = os.environ.get("DB_USER")
+    PORT = os.environ.get("DB_PORT")
+    SQLALCHEMY_DATABASE_URI = f"postgresql://{USERNAME}:{PASSWORD}@{HOST}:{PORT}/{DB}"
 
 
-class ConfigApp(ConfigDB):
+class ConfigApp(Config):
     class Web:
         PORT = 5000
         HOST = "0.0.0.0"
@@ -51,12 +48,7 @@ class ConfigEnv(ConfigApp):
 
     class Columns:
         USER = [
-            [
-                "LOGIN",
-                "EMAIL",
-                "SNILS",
-                "PHONE",
-            ],
+            ["LOGIN", "EMAIL", "SNILS", "PHONE", "USER_ROLE_ID", "SPEC_CODE"],
             "LOGIN",
             "userAndInfo",
         ]
@@ -82,9 +74,9 @@ class ConfigEnv(ConfigApp):
         MO = [["MO_ID", "MO_NAME"], "MO_ID", "lpu"]
 
 
-class Production(ConfigApp):
+class Production(Config):
     pass
 
 
-class Development(ConfigApp):
+class Development(Config):
     FILE_PATH = os.environ.get("SECRET_PATH", None)

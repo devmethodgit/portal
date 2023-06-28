@@ -9,6 +9,7 @@ from database.models import (
     Role,
     Lpu,
     LpusMo,
+    UsersRole,
 )
 
 data_bp = Blueprint("data", __name__)
@@ -76,14 +77,14 @@ def check_user(user_id):
     )
 
 
-@data_bp.post("/spec/<int:user_id>/<int:spec_id>")
-def add_user_to_spec(user_id, spec_id):
-    db.session.add(UsersSpec(users_id=user_id, spec_id=spec_id))
-    db.session.commit()
-    return (
-        jsonify(message="User to spec added!"),
-        Config.ResponseStatusCode.OK,
-    )
+# @data_bp.post("/spec/<int:user_id>/<int:spec_id>")
+# def add_user_to_spec(user_id, spec_id):
+#     db.session.add(UsersSpec(users_id=user_id, spec_id=spec_id))
+#     db.session.commit()
+#     return (
+#         jsonify(message="User to spec added!"),
+#         Config.ResponseStatusCode.OK,
+#     )
 
 
 @data_bp.post("/addInfo")
@@ -113,19 +114,54 @@ def get_spec_id(user_id):
     )
 
 
+def fill_and_commit_data(data, col_name, model, functor):
+    for i in range(len(data)):
+        data[i][col_name] = functor(i)
+    targets = [model(user_data) for user_data in data]
+    db.session.add_all(targets)
+    db.session.commit()
+
+
 @fill_tables_bp.post("/list/userAndInfo")
-def add_list_user_and_info():
+def add_list_user_all_info():
     data = request.get_json()
     users = [User(user_data) for user_data in data]
     db.session.add_all(users)
     db.session.commit()
-    for i in range(len(users)):
-        data[i]["USER_ID"] = users[i].id
-    add_infos = [AdditionalInfo(info) for info in data]
-    db.session.add_all(add_infos)
-    db.session.commit()
+
+    fill_and_commit_data(data, "USER_ID", AdditionalInfo, lambda x: users[x].id)
+
+    fill_and_commit_data(
+        data,
+        "USER_ROLE_ID",
+        UsersRole,
+        lambda x: Role.query.filter(Role.role_id == data[x]["USER_ROLE_ID"]).first().id,
+    )
+    fill_and_commit_data(
+        data,
+        "SPEC_CODE",
+        UsersSpec,
+        lambda x: Specialties.query.filter(
+            Specialties.spec_code == data[x]["SPEC_CODE"]
+        )
+        .first()
+        .id,
+    )
     return (
         jsonify(message="Info was added!"),
+        Config.ResponseStatusCode.OK,
+    )
+
+
+@fill_tables_bp.post("/list/user")
+def add_list_user():
+    data = request.get_json()
+    users = [User(user_data) for user_data in data]
+    db.session.add_all(users)
+    db.session.commit()
+    users_id = [user.id for user in users]
+    return (
+        jsonify(message="User added!", users_id=users_id),
         Config.ResponseStatusCode.OK,
     )
 
@@ -185,18 +221,6 @@ def get_spec(spec_id):
 
     return (
         jsonify(message="Spec founded!", spec=spec_dict),
-        Config.ResponseStatusCode.OK,
-    )
-
-
-@fill_tables_bp.post("/list/user")
-def add_list_user():
-    users = [User(user_data) for user_data in request.get_json()]
-    db.session.add_all(users)
-    db.session.commit()
-    users_id = [user.id for user in users]
-    return (
-        jsonify(message="User added!", users_id=users_id),
         Config.ResponseStatusCode.OK,
     )
 
