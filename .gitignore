@@ -4,4 +4,4 @@ data
 .*
 !.gitignore
 *.xlsx
-./spec.py
+src/duplication/data.parquet
