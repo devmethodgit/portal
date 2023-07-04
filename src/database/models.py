@@ -1,7 +1,8 @@
-from .database import db
 from datetime import datetime
 from sqlalchemy.orm import relationship
 from sqlalchemy import event, text
+
+from .database import db
 
 
 """

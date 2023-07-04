@@ -1,5 +1,15 @@
 import os
 from dotenv import load_dotenv
+import logging
+
+
+def setup_logger(filename):
+    logging.basicConfig(
+        level=logging.ERROR,
+        filename=filename,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    )
+
 
 assert load_dotenv(
     ".env"
@@ -17,7 +27,7 @@ assert load_dotenv(
 
 
 class Config:
-    pass
+    TZ = os.environ.get("DB_TIMEZONE")
 
 
 class ConfigDB(Config):
@@ -45,33 +55,22 @@ class ConfigApp(Config):
 
 class ConfigEnv(ConfigApp):
     ENV = os.environ.get("FLASK_ENV")
+    PARQUET_PATH = "./duplication/data.parquet"
 
     class Columns:
-        USER = [
-            ["LOGIN", "EMAIL", "SNILS", "PHONE", "USER_ROLE_ID", "SPEC_CODE"],
-            "LOGIN",
-            "userAndInfo",
-        ]
+        USER = ["LOGIN", "EMAIL", "SNILS", "PHONE"]
 
         ROLE = [
-            [
-                "USER_ROLE_ID",
-                "USER_ROLE",
-            ],
             "USER_ROLE_ID",
-            "role",
+            "USER_ROLE",
         ]
         SPEC = [
-            [
-                "SPEC_CODE",
-                "SPEC_NAME",
-            ],
             "SPEC_CODE",
-            "spec",
+            "SPEC_NAME",
         ]
-        LPU = [["LPU_ID", "LPU_NAME", "OGRN"], "LPU_ID", "lpu"]
-        LPU_TO_MO = [["LPU_ID", "MO_ID"], "LPU_ID", "lpuToMo"]
-        MO = [["MO_ID", "MO_NAME"], "MO_ID", "lpu"]
+        LPU = ["LPU_ID", "LPU_NAME", "OGRN"]
+        LPU_TO_MO = ["LPU_ID", "MO_ID"]
+        MO = ["MO_ID", "MO_NAME"]
 
 
 class Production(Config):
@@ -79,4 +78,4 @@ class Production(Config):
 
 
 class Development(Config):
-    FILE_PATH = os.environ.get("SECRET_PATH", None)
+    EXCEL_FILE_PATH = "./duplication/database.xlsx"
