@@ -5,3 +5,5 @@ data
 !.gitignore
 *.xlsx
 src/duplication/data.parquet
+src/celerybeat-schedule
+src/celery_tasks.log

@@ -48,7 +48,10 @@ def get_user_df(df):
     return user_frame
 
 
-def delete_users(user_frame):
+def delete_users(user_frame: pd.DataFrame):
+    if user_frame.empty:
+        return
+
     with app.app_context():
         user_frame.apply(
             lambda x: User.query.filter(User.login == x["LOGIN"]).delete(),
@@ -57,7 +60,10 @@ def delete_users(user_frame):
         db.session.commit()
 
 
-def add_users(user_frame):
+def add_users(user_frame: pd.DataFrame):
+    if user_frame.empty:
+        return
+
     users = []
     user_frame.apply(lambda x: users.append(User(x)), axis=1)
 
