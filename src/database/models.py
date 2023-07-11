@@ -19,7 +19,7 @@ CREATE TABLE lpus (
     ogrn VARCHAR(16) NOT NULL
 );
 
-CREATE TABLE specialties (
+CREATE TABLE specialities (
     id SERIAL PRIMARY KEY,
     spec_code INTEGER UNIQUE,
     spec_name VARCHAR(255) NOT NULL
@@ -38,7 +38,7 @@ CREATE TABLE users_to_role (
 
 CREATE TABLE user_to_specialisation (
     users_id INTEGER PRIMARY KEY REFERENCES users (id),
-    spec_id INTEGER REFERENCES specialties (id)
+    spec_id INTEGER REFERENCES specialities (id)
 );
 
 CREATE TABLE user_to_lpu (
@@ -104,7 +104,7 @@ EXECUTE FUNCTION update_changed_at();
 
 CREATE INDEX idx_role ON role (role_id);
 CREATE INDEX idx_lpus ON lpus (lpus_id);
-CREATE INDEX idx_specialties ON specialties (spec_code);
+CREATE INDEX idx_specialities ON specialities (spec_code);
 CREATE INDEX idx_users_additional_info ON users_additional_info (user_id);
 CREATE INDEX idx_users_to_role ON users_to_role (users_id, role_id);
 CREATE INDEX idx_users_to_specialisation ON users_to_specialisation (users_id, spec_id);
@@ -116,8 +116,7 @@ CREATE INDEX idx_users ON users (login);
 
 class Role(db.Model):
     __tablename__ = "role"
-    id = db.Column(db.Integer, primary_key=True)
-    role_id = db.Column(db.Integer, unique=True)
+    role_id = db.Column(db.Integer, primary_key=True)
     role_name = db.Column(db.String(128), nullable=False)
 
     def __init__(self, data: dict):
@@ -137,10 +136,9 @@ class Lpu(db.Model):
         self.ogrn = data["OGRN"] if "OGRN" in data else None
 
 
-class Specialties(db.Model):
-    __tablename__ = "specialties"
-    id = db.Column(db.Integer, primary_key=True)
-    spec_code = db.Column(db.Integer, unique=True)
+class Specialities(db.Model):
+    __tablename__ = "specialities"
+    spec_code = db.Column(db.Integer, primary_key=True)
     spec_name = db.Column(db.String(255), nullable=False)
 
     def __init__(self, data):
@@ -150,13 +148,13 @@ class Specialties(db.Model):
 
 class UsersRole(db.Model):
     __tablename__ = "users_to_role"
+    id = db.Column(db.Integer, primary_key=True)
     users_id = db.Column(
         db.Integer,
         db.ForeignKey("users.id"),
-        primary_key=True,
         nullable=False,
     )
-    role_id = db.Column(db.Integer, db.ForeignKey("role.id"))
+    role_id = db.Column(db.Integer, db.ForeignKey("role.role_id"))
     created_at = db.Column(db.DateTime(timezone=True), default=datetime.now())
     changed_at = db.Column(db.DateTime(timezone=True))
 
@@ -167,13 +165,14 @@ class UsersRole(db.Model):
 
 class UsersSpec(db.Model):
     __tablename__ = "users_to_specialisation"
+    id = db.Column(db.Integer, primary_key=True)
     users_id = db.Column(
         db.Integer,
         db.ForeignKey("users.id"),
-        primary_key=True,
         nullable=False,
     )
-    spec_id = db.Column(db.Integer, db.ForeignKey("specialties.id"))
+    spec_id = db.Column(db.Integer, db.ForeignKey("specialities.spec_code"))
+
     created_at = db.Column(db.DateTime(timezone=True), default=datetime.now())
     changed_at = db.Column(db.DateTime(timezone=True))
 
@@ -184,29 +183,31 @@ class UsersSpec(db.Model):
 
 class UsersLpu(db.Model):
     __tablename__ = "users_to_lpu"
+    id = db.Column(db.Integer, primary_key=True)
     users_id = db.Column(
         db.Integer,
         db.ForeignKey("users.id"),
-        primary_key=True,
         nullable=False,
     )
-    lpu_id = db.Column(db.Integer, db.ForeignKey("lpu.id"))
+    lpu_id = db.Column(db.String(32), db.ForeignKey("lpus.id"))
+
     created_at = db.Column(db.DateTime(timezone=True), default=datetime.now())
     changed_at = db.Column(db.DateTime(timezone=True))
 
 
 class LpusMo(db.Model):
     __tablename__ = "lpus_to_mo"
+    id = db.Column(db.Integer, primary_key=True)
     lpu_id = db.Column(
         db.String(32),
         db.ForeignKey("lpus.id"),
-        primary_key=True,
         nullable=False,
     )
     mo_id = db.Column(
         db.String(32),
         db.ForeignKey("lpus.id"),
     )
+
     created_at = db.Column(db.DateTime(timezone=True), default=datetime.now())
     changed_at = db.Column(db.DateTime(timezone=True))
 
@@ -217,19 +218,21 @@ class LpusMo(db.Model):
 
 class AdditionalInfo(db.Model):
     __tablename__ = "users_additional_info"
+    id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(
         db.Integer,
         db.ForeignKey("users.id"),
-        primary_key=True,
         nullable=False,
     )
     phone = db.Column(db.String(64))
     email = db.Column(db.String(255))
+    region = db.Column(db.String(128))
 
     def __init__(self, data: dict):
         self.user_id = data.get("USER_ID")
         self.phone = data.get("PHONE", None)
         self.email = data.get("EMAIL", None)
+        self.region = data.get("REGION_NAME", None)
 
 
 class User(db.Model):

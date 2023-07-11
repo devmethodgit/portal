@@ -2,7 +2,7 @@ import logging
 import traceback
 
 from .celery import celery_app
-from .red import redis_client
+from redis_app.red import redis_client
 from duplication.update_state import main_update
 from config import setup_logger
 

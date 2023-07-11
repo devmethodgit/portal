@@ -18,6 +18,7 @@ def create_app():
         app.config.from_object(ConfigDB)
 
         db.init_app(app)
+        # db.create_all()
         # wait for the database to load
         if "DOCKER_CONTAINER" in os.environ:
             time.sleep(15)
