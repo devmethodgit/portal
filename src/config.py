@@ -3,16 +3,8 @@ from dotenv import load_dotenv
 import logging
 
 
-def setup_logger(filename):
-    logging.basicConfig(
-        level=logging.ERROR,
-        filename=filename,
-        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    )
-
-
 assert load_dotenv(
-    ".env"
+    "/web/.env"
 ), """Can't load the environment:(
                                         Set in .env file: 
                                         if DB env:
@@ -24,6 +16,18 @@ assert load_dotenv(
                                             DB_TIMEZONE= (for example: Europe/Moscow)
                                         FLASK_ENV=production/development
                                         """
+
+
+def setup_logger(filename):
+    logging.basicConfig(
+        level=logging.ERROR,
+        filename=filename,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    )
+
+
+class Variables:
+    local_hash = {}
 
 
 class Config:
@@ -57,20 +61,13 @@ class ConfigEnv(ConfigApp):
     ENV = os.environ.get("FLASK_ENV")
     PARQUET_PATH = "./duplication/data.parquet"
 
-    class Columns:
-        USER = ["LOGIN", "EMAIL", "SNILS", "PHONE"]
-
-        ROLE = [
-            "USER_ROLE_ID",
-            "USER_ROLE",
-        ]
-        SPEC = [
-            "SPEC_CODE",
-            "SPEC_NAME",
-        ]
-        LPU = ["LPU_ID", "LPU_NAME", "OGRN"]
-        LPU_TO_MO = ["LPU_ID", "MO_ID"]
-        MO = ["MO_ID", "MO_NAME"]
+    # SPEC = [
+    #     "SPEC_CODE",
+    #     "SPEC_NAME",
+    # ]
+    # LPU = ["LPU_ID", "LPU_NAME", "OGRN"]
+    # LPU_TO_MO = ["LPU_ID", "MO_ID"]
+    # MO = ["MO_ID", "MO_NAME"]
 
 
 class Production(Config):
